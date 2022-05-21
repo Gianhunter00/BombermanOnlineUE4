@@ -39,6 +39,7 @@ public class BombermanJsonMapReader : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UnrealEd",
+                "WorkspaceMenuStructure",
 				// ... add private dependencies that you statically link with here ...	
 			}
             );

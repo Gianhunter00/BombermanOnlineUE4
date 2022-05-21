@@ -1,13 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "BombermanJsonMapReader.h"
-#include "AssetRegistryModule.h"
-#include "BreakableWall.h"
-#include "Engine/DirectionalLight.h"
-#include "Engine/SkyLight.h"
-#include "Engine/StaticMeshActor.h"
-#include "Factories/WorldFactory.h"
-#include "Misc/FileHelper.h"
 
 #define LOCTEXT_NAMESPACE "FBombermanJsonMapReaderModule"
 
@@ -17,75 +10,28 @@ void FBombermanJsonMapReaderModule::StartupModule()
 	MapCreateActor.Add("0", &FBombermanJsonMapReaderModule::CreatePlatform);
 	MapCreateActor.Add("1", &FBombermanJsonMapReaderModule::CreateBreakableWall);
 	MapCreateActor.Add("2", &FBombermanJsonMapReaderModule::CreateUnbreakableWall);
+	MapCreationTool = new BombermanMapCreationTool();
+	FuncToBind = MapCreationTool->OnPathChosenFromDialog->CreateRaw(this, &FBombermanJsonMapReaderModule::CreateMap);
+	MapCreationTool->OnPathChosenFromDialog = &FuncToBind;
 }
 
 void FBombermanJsonMapReaderModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
-
+	MapCreateActor.Empty();
 }
+
+
+
+
 //D:\Test.txt
 bool FBombermanJsonMapReaderModule::Exec(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar)
 {
 	if (FParse::Command(&Cmd, TEXT("newlevel")))
 	{
 		FString Path = FParse::Token(Cmd, true);
-		UE_LOG(LogTemp, Error, TEXT("%s"), *Path);
-		TArray<FString> FileArr;
-		FFileHelper::LoadFileToStringArray(FileArr, *Path);
-		int32 StartX = 0;
-		int32 StartY = 0;
-		float Offset = DefaultSize * 0.5f;
-		if (FileArr.Num() > 0)
-		{
-			UWorldFactory* NewWorld = NewObject<UWorldFactory>();
-
-			uint64 SuffixAssetName = FPlatformTime::Cycles64();
-			FString AssetName = FString::Printf(TEXT("M_NewLevel_%llu"), SuffixAssetName);
-			UPackage* Package = CreatePackage(*FString::Printf(TEXT("/Game/%s"), *AssetName));
-
-			UObject* NewLevelObject = NewWorld->FactoryCreateNew(NewWorld->SupportedClass, Package, *AssetName, EObjectFlags::RF_Standalone | EObjectFlags::RF_Public, nullptr, GWarn);
-			FAssetRegistryModule::AssetCreated(NewLevelObject);
-
-			UWorld* WorldCasted = Cast<UWorld>(NewLevelObject);
-			WorldCasted->Modify();
-			WorldCasted->SpawnActor<ASkyLight>();
-			ADirectionalLight* MyDirectionalLight = WorldCasted->SpawnActor<ADirectionalLight>();
-			MyDirectionalLight->SetCastShadows(false);
-			FTransform MyDirectionalLightNewTransform = MyDirectionalLight->GetTransform();
-			FVector NewLightRot = FVector(0, 275, 0);
-			FQuat MyDirectionalLightNewRot = FQuat::MakeFromEuler(NewLightRot);
-			MyDirectionalLightNewTransform.SetRotation(MyDirectionalLightNewRot);
-			MyDirectionalLight->SetActorTransform(MyDirectionalLightNewTransform);
-			UBlueprint* BPSkySphere = LoadObject<UBlueprint>(nullptr, *BombermanSkySphereBlueprintPath);
-			if (BPSkySphere)
-			{
-				WorldCasted->SpawnActor(BPSkySphere->GeneratedClass);
-			}
-			for (FString Line : FileArr)
-			{
-				UE_LOG(LogTemp, Error, TEXT("%s"), *Line);
-				TArray<FString> BlockInLine;
-				Line.ParseIntoArray(BlockInLine, TEXT(","));
-				for (int32 Index = 0; Index < BlockInLine.Num(); Index++)
-				{
-					(this->* * MapCreateActor.Find("0"))(WorldCasted, StartX * DefaultSize + (int32)Offset, StartY * DefaultSize + (int32)Offset);
-					if (BlockInLine[Index].Equals("0"))
-					{
-						++StartX;
-						continue;
-					}
-					(this->* * MapCreateActor.Find(BlockInLine[Index]))(WorldCasted, StartX * DefaultSize + (int32)Offset, StartY * DefaultSize + (int32)Offset);
-
-					++StartX;
-				}
-				StartX = 0;
-				++StartY;
-			}
-			WorldCasted->PostEditChange();
-			WorldCasted->MarkPackageDirty();
-		}
+		CreateMap(Path);
 
 		return true;
 	}
@@ -147,6 +93,64 @@ UObject* FBombermanJsonMapReaderModule::CreateBreakableWall(UWorld* InWorld, con
 		UE_LOG(LogTemp, Error, TEXT("FAILED SPAWN"));
 	}
 	return BPBreakableWall;
+}
+
+void FBombermanJsonMapReaderModule::CreateMap(FString Path)
+{
+	TArray<FString> FileArr;
+	FFileHelper::LoadFileToStringArray(FileArr, *Path);
+	int32 StartX = 0;
+	int32 StartY = 0;
+	float Offset = DefaultSize * 0.5f;
+	if (FileArr.Num() > 0)
+	{
+		UWorldFactory* NewWorld = NewObject<UWorldFactory>();
+
+		uint64 SuffixAssetName = FPlatformTime::Cycles64();
+		FString AssetName = FString::Printf(TEXT("M_NewLevel_%llu"), SuffixAssetName);
+		UPackage* Package = CreatePackage(*FString::Printf(TEXT("/Game/%s"), *AssetName));
+
+		UObject* NewLevelObject = NewWorld->FactoryCreateNew(NewWorld->SupportedClass, Package, *AssetName, EObjectFlags::RF_Standalone | EObjectFlags::RF_Public, nullptr, GWarn);
+		FAssetRegistryModule::AssetCreated(NewLevelObject);
+
+		UWorld* WorldCasted = Cast<UWorld>(NewLevelObject);
+		WorldCasted->Modify();
+		WorldCasted->SpawnActor<ASkyLight>();
+		ADirectionalLight* MyDirectionalLight = WorldCasted->SpawnActor<ADirectionalLight>();
+		MyDirectionalLight->SetCastShadows(false);
+		FTransform MyDirectionalLightNewTransform = MyDirectionalLight->GetTransform();
+		FVector NewLightRot = FVector(0, 275, 0);
+		FQuat MyDirectionalLightNewRot = FQuat::MakeFromEuler(NewLightRot);
+		MyDirectionalLightNewTransform.SetRotation(MyDirectionalLightNewRot);
+		MyDirectionalLight->SetActorTransform(MyDirectionalLightNewTransform);
+		UBlueprint* BPSkySphere = LoadObject<UBlueprint>(nullptr, *BombermanSkySphereBlueprintPath);
+		if (BPSkySphere)
+		{
+			WorldCasted->SpawnActor<AActor>(BPSkySphere->GeneratedClass);
+		}
+		for (FString Line : FileArr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s"), *Line);
+			TArray<FString> BlockInLine;
+			Line.ParseIntoArray(BlockInLine, TEXT(","));
+			for (int32 Index = 0; Index < BlockInLine.Num(); Index++)
+			{
+				(this->* * MapCreateActor.Find("0"))(WorldCasted, StartX * DefaultSize + (int32)Offset, StartY * DefaultSize + (int32)Offset);
+				if (BlockInLine[Index].Equals("0"))
+				{
+					++StartX;
+					continue;
+				}
+				(this->* * MapCreateActor.Find(BlockInLine[Index]))(WorldCasted, StartX * DefaultSize + (int32)Offset, StartY * DefaultSize + (int32)Offset);
+
+				++StartX;
+			}
+			StartX = 0;
+			++StartY;
+		}
+		WorldCasted->PostEditChange();
+		WorldCasted->MarkPackageDirty();
+	}
 }
 
 FVector FBombermanJsonMapReaderModule::AdjustScale(const FVector InMeshSize) const
