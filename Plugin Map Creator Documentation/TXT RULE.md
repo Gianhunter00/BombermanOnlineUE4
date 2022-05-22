@@ -4,6 +4,7 @@ TXT Format is pretty simple, it's a line of number divided by a "," the number d
 - 1 Spawn the Breakable block
 - 2 Spawn the Unbreakable block
 To make a new Row you can just create a newline and follow the same rule as before.
+
 Example:
 2,2,2,2,2,2
 2,0,0,1,1,2
