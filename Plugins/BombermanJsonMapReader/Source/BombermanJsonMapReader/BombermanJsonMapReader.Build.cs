@@ -35,10 +35,12 @@ public class BombermanJsonMapReader : ModuleRules
             new string[]
             {
                 "CoreUObject",
-                "Engine",
+                "Engine", 
                 "Slate",
                 "SlateCore",
+                "UMG",
                 "UnrealEd",
+                "InputCore",
                 "WorkspaceMenuStructure",
 				// ... add private dependencies that you statically link with here ...	
 			}

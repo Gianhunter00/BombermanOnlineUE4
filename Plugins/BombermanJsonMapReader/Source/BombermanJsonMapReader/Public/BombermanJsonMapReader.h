@@ -29,8 +29,8 @@ public:
 	UObject* CreatePlatform(UWorld* InWorld, const int32 InX, const int32 InY) const;
 	UObject* CreateUnbreakableWall(UWorld* InWorld, const int32 InX, const int32 InY) const;
 	UObject* CreateBreakableWall(UWorld* InWorld, const int32 InX, const int32 InY) const;
-	void CreateMap(FString Path);
-
+	void CreateMapFromPath(FString Path);
+	void CreateMap(TArray<FString> Data);
 private:
 	TMap<FString, CreateObject> MapCreateActor;
 	const FString BombermanFloorMeshPath = FString("StaticMesh'/Game/BombermanMapAsset/Mesh/FloorMesh.FloorMesh'");
@@ -46,5 +46,6 @@ private:
 	FVector	AdjustScale(const FVector InMeshSize) const;
 	FTransform AdjustTransform(const FVector InMeshSize, const int32 InX, const int32 InY, const int32 InZ) const;
 	BombermanMapCreationTool* MapCreationTool;
-	OnPathChosen FuncToBind;
+	OnPathChosen OnPathChosenFromDialog;
+	OnCreateMapTool OnCreateMapTool;
 };

@@ -11,8 +11,10 @@ void FBombermanJsonMapReaderModule::StartupModule()
 	MapCreateActor.Add("1", &FBombermanJsonMapReaderModule::CreateBreakableWall);
 	MapCreateActor.Add("2", &FBombermanJsonMapReaderModule::CreateUnbreakableWall);
 	MapCreationTool = new BombermanMapCreationTool();
-	FuncToBind = MapCreationTool->OnPathChosenFromDialog->CreateRaw(this, &FBombermanJsonMapReaderModule::CreateMap);
-	MapCreationTool->OnPathChosenFromDialog = &FuncToBind;
+	OnPathChosenFromDialog = MapCreationTool->OnPathChosenFromDialog->CreateRaw(this, &FBombermanJsonMapReaderModule::CreateMapFromPath);
+	OnCreateMapTool = MapCreationTool->OnCreateMapTool->CreateRaw(this, &FBombermanJsonMapReaderModule::CreateMap);
+	MapCreationTool->OnPathChosenFromDialog = &OnPathChosenFromDialog;
+	MapCreationTool->OnCreateMapTool = &OnCreateMapTool;
 }
 
 void FBombermanJsonMapReaderModule::ShutdownModule()
@@ -21,17 +23,13 @@ void FBombermanJsonMapReaderModule::ShutdownModule()
 	// we call this function before unloading the module.
 	MapCreateActor.Empty();
 }
-
-
-
-
 //D:\Test.txt
 bool FBombermanJsonMapReaderModule::Exec(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar)
 {
 	if (FParse::Command(&Cmd, TEXT("newlevel")))
 	{
 		FString Path = FParse::Token(Cmd, true);
-		CreateMap(Path);
+		CreateMapFromPath(Path);
 
 		return true;
 	}
@@ -45,6 +43,7 @@ UObject* FBombermanJsonMapReaderModule::CreatePlatform(UWorld* InWorld, const in
 	UStaticMesh* StaticMesh = LoadObject<UStaticMesh>(nullptr, *BombermanFloorMeshPath);
 	UMaterial* Material = LoadObject<UMaterial>(nullptr, *BombermanFloorMatPath);
 	FVector MeshSize = StaticMesh->GetBounds().GetBox().GetSize();
+	UE_LOG(LogTemp, Error, TEXT("%s"), *StaticMesh->GetBounds().GetBox().GetSize().ToString());
 	FTransform MyTransform = AdjustTransform(MeshSize, InX, InY, 0);
 	MyActor->SetActorTransform(MyTransform);
 	StaticMesh->SetMaterial(0, Material);
@@ -95,14 +94,19 @@ UObject* FBombermanJsonMapReaderModule::CreateBreakableWall(UWorld* InWorld, con
 	return BPBreakableWall;
 }
 
-void FBombermanJsonMapReaderModule::CreateMap(FString Path)
+void FBombermanJsonMapReaderModule::CreateMapFromPath(FString Path)
 {
 	TArray<FString> FileArr;
 	FFileHelper::LoadFileToStringArray(FileArr, *Path);
+	CreateMap(FileArr);
+}
+
+void FBombermanJsonMapReaderModule::CreateMap(TArray<FString> Data)
+{
 	int32 StartX = 0;
 	int32 StartY = 0;
 	float Offset = DefaultSize * 0.5f;
-	if (FileArr.Num() > 0)
+	if (Data.Num() > 0)
 	{
 		UWorldFactory* NewWorld = NewObject<UWorldFactory>();
 
@@ -128,7 +132,7 @@ void FBombermanJsonMapReaderModule::CreateMap(FString Path)
 		{
 			WorldCasted->SpawnActor<AActor>(BPSkySphere->GeneratedClass);
 		}
-		for (FString Line : FileArr)
+		for (FString Line : Data)
 		{
 			UE_LOG(LogTemp, Error, TEXT("%s"), *Line);
 			TArray<FString> BlockInLine;
@@ -156,9 +160,9 @@ void FBombermanJsonMapReaderModule::CreateMap(FString Path)
 FVector FBombermanJsonMapReaderModule::AdjustScale(const FVector InMeshSize) const
 {
 	FVector Scale;
-	Scale.X = Scale.X != 0 ? (1 / InMeshSize.X) * DefaultSize : 1;
-	Scale.Y = Scale.Y != 0 ? (1 / InMeshSize.Y) * DefaultSize : 1;
-	Scale.Z = Scale.Z != 0 ? (1 / InMeshSize.Z) * DefaultSize : 1;
+	Scale.X = !FMath::IsNearlyZero(InMeshSize.Z) ? (DefaultSize / InMeshSize.X) : 1;
+	Scale.Y = !FMath::IsNearlyZero(InMeshSize.Z) ? (DefaultSize / InMeshSize.Y) : 1;
+	Scale.Z = !FMath::IsNearlyZero(InMeshSize.Z) ? (DefaultSize / InMeshSize.Z) : 1;
 	return Scale;
 }
 
