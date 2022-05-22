@@ -20,9 +20,9 @@ Or you can create it by hands
 https://user-images.githubusercontent.com/23010885/169718779-5b291378-f07f-42f3-b287-55e4151fb48c.mp4
 
 ## Tool Documentation
-- [File TXT Format](https://github.com/Gianhunter00/BombermanOnlineUE4/Plugin Map Creator Documentation/TXT RULE.md)
+- [File TXT Format](https://github.com/Gianhunter00/BombermanOnlineUE4/blob/master/Plugin%2Map%2Creator%2Documentation/TXT%2RULE.md)
 
-- [Create By Hand](https://github.com/Gianhunter00/BombermanOnlineUE4/Plugin Map Creator Documentation/CREATING BY HAND.md)
+- [Create By Hand](https://github.com/Gianhunter00/BombermanOnlineUE4/Plugin%2Map%2Creator%2Documentation/CREATING%2BY%2HAND.md)
 
 
 ## Information about this project
