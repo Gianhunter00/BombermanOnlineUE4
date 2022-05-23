@@ -28,7 +28,7 @@ https://user-images.githubusercontent.com/23010885/169719864-99f3a042-be60-4567-
 ## Tool Documentation
 - [File TXT Format](https://github.com/Gianhunter00/BombermanOnlineUE4/blob/master/Plugin%20Map%20Creator%20Documentation/TXT%20RULE.md)
 
-- [Create By Hand](https://github.com/Gianhunter00/BombermanOnlineUE4/Plugin%20Map%20Creator%20Documentation/CREATING%20BY%20HAND.md)
+- [Create By Hand](https://github.com/Gianhunter00/BombermanOnlineUE4/blob/master/Plugin%20Map%20Creator%20Documentation/CREATING%20BY%20HAND.md)
 
 ## Information about this project
 This is an exercise i made to improve my skill with unreal engine and c++.
