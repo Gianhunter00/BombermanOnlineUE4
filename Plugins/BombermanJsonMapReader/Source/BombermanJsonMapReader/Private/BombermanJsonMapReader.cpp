@@ -130,7 +130,23 @@ void FBombermanJsonMapReaderModule::CreateMap(TArray<FString> Data)
 		UBlueprint* BPSkySphere = LoadObject<UBlueprint>(nullptr, *BombermanSkySphereBlueprintPath);
 		if (BPSkySphere)
 		{
-			WorldCasted->SpawnActor<AActor>(BPSkySphere->GeneratedClass);
+			AActor* SkySphere = WorldCasted->SpawnActor<AActor>(BPSkySphere->GeneratedClass);
+			FProperty* DirLightProp = BPSkySphere->GeneratedClass->FindPropertyByName(TEXT("Directional light actor"));
+			if (DirLightProp)
+			{
+				if (FObjectProperty* DirLightObjectProp = CastField<FObjectProperty>(DirLightProp))
+				{
+					UKismetSystemLibrary::SetObjectPropertyByName(SkySphere, FName("Directional light actor"), MyDirectionalLight);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("Cant Cast Prop"));
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Cant find Prop"));
+			}
 		}
 		for (FString Line : Data)
 		{
